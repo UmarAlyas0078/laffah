@@ -1,9 +1,13 @@
 library kf_drawer;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:sizer/sizer.dart';
 
 class KFDrawerController {
-  KFDrawerController({this.items = const [], required KFDrawerContent initialPage}) {
+  KFDrawerController(
+      {this.items = const [], required KFDrawerContent initialPage}) {
     page = initialPage;
   }
 
@@ -64,10 +68,11 @@ class KFDrawer extends StatefulWidget {
 class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
   bool _menuOpened = false;
   bool _isDraggingMenu = false;
-
   double _drawerWidth = 0.66;
   double _minScale = 0.86;
   double _borderRadius = 32.0;
+  double marginTop = 0.0;
+  double marginBottom = 0.0;
   double _shadowBorderRadius = 44.0;
   double _shadowOffset = 16.0;
   bool _scrollable = false;
@@ -82,6 +87,9 @@ class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
     animationController.forward();
     setState(() {
       _menuOpened = true;
+      print("Opening");
+      marginBottom = 50.0;
+      marginTop = 50.0;
     });
   }
 
@@ -89,6 +97,9 @@ class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
     animationController.reverse();
     setState(() {
       _menuOpened = false;
+      marginBottom = 0.0;
+      marginTop = 0.0;
+      print("Closing");
     });
   }
 
@@ -101,15 +112,24 @@ class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
       var opened = false;
       setState(() {
         _isDraggingMenu = false;
+        marginTop = 0.0;
+        marginBottom = 0.0;
       });
       if (animationController.value >= 0.4) {
         animationController.forward();
+        print("Animation Opening");
         opened = true;
       } else {
         animationController.reverse();
+        print("Animation Closing");
+        marginTop = 0.0;
+        opened = false;
+        marginBottom = 0.0;
       }
       setState(() {
         _menuOpened = opened;
+        marginTop = 50.0;
+        marginBottom = 50.0;
       });
     }
   }
@@ -222,11 +242,13 @@ class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
                       children: <Widget>[
                         Expanded(
                           child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 32.0),
+                            padding:
+                                const EdgeInsets.only(top: 64.0, bottom: 64.0),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.all(Radius.circular(_shadowBorderRadius)),
+                              borderRadius: BorderRadius.all(
+                                  Radius.circular(_shadowBorderRadius)),
                               child: Container(
-                                color: Colors.white.withAlpha(128),
+                                color: const Color(0xFFE6E6E6),
                               ),
                             ),
                           ),
@@ -234,9 +256,13 @@ class _KFDrawerState extends State<KFDrawer> with TickerProviderStateMixin {
                       ],
                     ),
                     Padding(
-                      padding: EdgeInsets.only(left: animation.value * _shadowOffset),
+                      padding: EdgeInsets.only(
+                          left: animation.value * _shadowOffset,
+                          top: marginTop,
+                          bottom: marginBottom),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(radiusAnimation.value),
+                        borderRadius:
+                            BorderRadius.circular(radiusAnimation.value),
                         child: Container(
                           color: Colors.white,
                           child: widget.controller?.page,
@@ -287,14 +313,12 @@ class _KFDrawer extends StatefulWidget {
 
 class __KFDrawerState extends State<_KFDrawer> {
   var _padding = EdgeInsets.symmetric(vertical: 64.0);
+  final String assetName = 'assets/images/ic_logo.svg';
 
   Widget _getMenu() {
     if (widget.scrollable) {
       return ListView(
         children: [
-          Container(
-            child: widget.header,
-          ),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: widget.items,
@@ -305,9 +329,6 @@ class __KFDrawerState extends State<_KFDrawer> {
     } else {
       return Column(
         children: [
-          Container(
-            child: widget.header,
-          ),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -330,12 +351,27 @@ class __KFDrawerState extends State<_KFDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: widget.decoration,
-      child: Padding(
-        padding: _padding,
-        child: _getMenu(),
-      ),
+    return Stack(
+      children: [
+        Container(
+          decoration: widget.decoration,
+          child: Padding(
+            padding: _padding,
+            child: _getMenu(),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 5.h),
+              height: 50.0,
+              width: 50.0,
+              child: SvgPicture.asset(assetName),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -354,24 +390,20 @@ class KFDrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 2.0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  padding: EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: icon,
-                ),
-                if (text != null) text!,
-              ],
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        margin: EdgeInsets.only(top: 5.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.only(
+                  left: 4.h, right: MediaQuery.of(context).size.height * 0.024),
+              child: icon,
             ),
-          ),
+            if (text != null) text!,
+          ],
         ),
       ),
     );
